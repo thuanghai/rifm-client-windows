@@ -30,21 +30,21 @@ namespace RIFMClient
 		// error message
 		std::wstring m_wstrError;
 
-		BOOL Open(std::wstring wstrUrl);
-		BOOL Send(std::wstring method, std::string strData);
+		BOOL Open(IN std::wstring wstrUrl);
+		BOOL Send(IN std::wstring method, IN std::string strData);
 
 		std::wstring GetDateTime();
-		std::wstring GetFormatLastErrorCode(DWORD dwError);
-		VOID SetErrorMessage(std::wstring func, std::wstring msg);
+		std::wstring GetFormatLastErrorCode(IN DWORD dwError);
+		VOID SetErrorMessage(IN std::wstring func, IN std::wstring msg);
 	public:
 		WinHttpClient();
 		~WinHttpClient();
 		
 		// DB 'CRUD' operation
-		BOOL Create(std::wstring wstrUrl, std::string strData);
-		BOOL Read(std::wstring wstrUrl);
-		BOOL Update(std::wstring wstrUrl, std::string strData);
-		BOOL Delete(std::wstring wstrUrl);
+		BOOL Create(IN std::wstring wstrUrl, IN std::string strData);
+		BOOL Read(IN std::wstring wstrUrl);
+		BOOL Update(IN std::wstring wstrUrl, IN std::string strData);
+		BOOL Delete(IN std::wstring wstrUrl);
 		// Ger response code for 'CRUD'
 		DWORD GetStatusCode();
 		// Get response body for 'CRUD'

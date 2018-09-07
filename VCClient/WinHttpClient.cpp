@@ -5,7 +5,7 @@ namespace RIFMClient
 {
 	WinHttpClient::WinHttpClient()
 	{
-		m_wstrAgent = L"RIFM Client 0.4";
+		m_wstrAgent = L"RIFM Client 0.2";
 	}
 
 	WinHttpClient::~WinHttpClient()
@@ -13,6 +13,11 @@ namespace RIFMClient
 		Close();
 	}
 
+	/*
+	 * Summary: get current localtime
+	 * Parameters: NULL
+	 * Return: current localtime string
+	 */
 	std::wstring WinHttpClient::GetDateTime()
 	{
 		SYSTEMTIME lt;
@@ -25,7 +30,14 @@ namespace RIFMClient
 		return wss.str();
 	}
 
-	VOID WinHttpClient::SetErrorMessage(std::wstring func, std::wstring msg)
+	/*
+	 * Summary: construct error message
+	 * Parameters:
+	 *  - func: function name when error happen
+	 *  - msg: the detial of error message
+	 * Return: NULL
+	 */
+	VOID WinHttpClient::SetErrorMessage(IN std::wstring func, IN std::wstring msg)
 	{
 		m_wstrError.clear();
 		m_wstrError.append(L"<Error>\n");
@@ -45,11 +57,22 @@ namespace RIFMClient
 		m_wstrError.append(L"\n");
 	}
 
+	/*
+	 * Summary: get error message
+	 * Parameters: NULL
+	 * Return: error message
+	 */
 	std::wstring WinHttpClient::GetErrorMessage()
 	{
 		return m_wstrError;
 	}
 
+
+	/*
+	 * Summary: connect the database
+	 * Parameters: NULL
+	 * Return : NULL
+	 */
 	VOID WinHttpClient::Close()
 	{
 		if (m_hRequest)
@@ -69,7 +92,13 @@ namespace RIFMClient
 		}
 	}
 
-	std::wstring WinHttpClient::GetFormatLastErrorCode(DWORD dwError)
+	/*
+	 * Summary: format error code
+	 * Parameters:
+	 *  - dwError: input error code
+	 * Return: error code string
+	 */
+	std::wstring WinHttpClient::GetFormatLastErrorCode(IN DWORD dwError)
 	{
 		WCHAR wszError[16];
 		ZeroMemory(wszError, sizeof(wszError) / sizeof(WCHAR));
@@ -77,7 +106,13 @@ namespace RIFMClient
 		return wszError;
 	}
 
-	BOOL WinHttpClient::Open(std::wstring wstrUrl)
+	/*
+	 * Summary: open winhttp function and parse input url
+	 * Rarameters:
+	 *  - wstrUrl: input url for request rifm server database
+	 * Return: true open is success
+	 */
+	BOOL WinHttpClient::Open(IN std::wstring wstrUrl)
 	{
 		// check open handles
 		Close();
@@ -149,7 +184,14 @@ namespace RIFMClient
 		}
 	}
 
-	BOOL WinHttpClient::Send(std::wstring method, std::string strData)
+	/*
+	 * Summary: send request to communicate with rifm server
+	 * Parameters:
+	 * - method: http method include 'GET', 'POST', 'PUT', 'DELETE'
+	 * - strData: http send data, json string is used here
+	 * Return: trun if send success
+	 */
+	BOOL WinHttpClient::Send(IN std::wstring method, IN std::string strData)
 	{
 		BOOL bResult;
 		// specifies the initial target server of an HTTP request
@@ -221,12 +263,15 @@ namespace RIFMClient
 #endif
 			return FALSE;
 		}
-		else
-		{
-			return TRUE;
-		}
+		// waits to receive the response to an HTTP request
+		return WinHttpReceiveResponse(m_hRequest, NULL);
 	}
 
+	/*
+	 * Summary: get http response code
+	 * Parameters: NULL
+	 * Return: http response code
+	 */
 	DWORD WinHttpClient::GetStatusCode()
 	{
 		DWORD dwStatusCode;
@@ -242,6 +287,11 @@ namespace RIFMClient
 		return bRet ? dwStatusCode : 0;
 	}
 
+	/*
+	 * Summary: get http response body
+	 * Parameters: NULL
+	 * Return: http response string
+	 */
 	std::string WinHttpClient::GetResponseBody()
 	{
 		BOOL bResult;
@@ -316,43 +366,57 @@ namespace RIFMClient
 		return strResponseBody;
 	}
 
-	BOOL WinHttpClient::Create(std::wstring wstrUrl, std::string strData)
+	/*
+	 * Summary: send request to rifm server for create a document in mongodb
+	 * Parameters:
+	 *  - wstrUrl: url path string for restful interface of creating a document in mongodb
+	 *  - strData: json string for a document to be created
+	 * Return: true if create operation success
+	 */
+	BOOL WinHttpClient::Create(IN std::wstring wstrUrl, IN std::string strData)
 	{
 		if (Open(wstrUrl) == FALSE)
 			return FALSE;
-		if (Send(L"POST", strData) == FALSE)
-			return FALSE;
-		// waits to receive the response to an HTTP request
-		return WinHttpReceiveResponse(m_hRequest, NULL);
+		return Send(L"POST", strData);
 	}
 
-	BOOL WinHttpClient::Read(std::wstring wstrUrl)
+	/*
+	 * Summary: send request to rifm server for read a document in mongodb
+	 * Parameters:
+	 *  - wstrUrl: url path string for restful interface of reading a document
+	 * Return: true if read operation is success
+	 */
+	BOOL WinHttpClient::Read(IN std::wstring wstrUrl)
 	{
 		if (Open(wstrUrl) == FALSE)
 			return FALSE;
-		if (Send(L"GET", "") == FALSE)
-			return FALSE;
-		// waits to receive the response to an HTTP request
-		return WinHttpReceiveResponse(m_hRequest, NULL);
+		return Send(L"GET", "");
 	}
 
-	BOOL WinHttpClient::Update(std::wstring wstrUrl, std::string strData)
+	/*
+	 * Summary: send request to rifm server for update a document in mongodb
+	 * Parameters:
+	 *  - wstrUrl: url path string for restful interface of updating a document in mongodb
+	 *  - strData: json string for a document to be updated
+	 * Return: true if update operation success
+	 */
+	BOOL WinHttpClient::Update(IN std::wstring wstrUrl, IN std::string strData)
 	{
 		if (Open(wstrUrl) == FALSE)
 			return FALSE;
-		if (Send(L"PUT", strData) == FALSE)
-			return FALSE;
-		// waits to receive the response to an HTTP request
-		return WinHttpReceiveResponse(m_hRequest, NULL);
+		return Send(L"PUT", strData);
 	}
 
-	BOOL WinHttpClient::Delete(std::wstring wstrUrl)
+	/*
+	 * Summary: send request to rifm server for delete a document in mongodb
+	 * Parameters:
+	 *  - wstrUrl: url path string for restful interface of deleting a document in mongodb
+	 * Return: true if delete operation success
+	 */
+	BOOL WinHttpClient::Delete(IN std::wstring wstrUrl)
 	{
 		if (Open(wstrUrl) == FALSE)
 			return FALSE;
-		if (Send(L"DELETE", "") == FALSE)
-			return FALSE;
-		// waits to receive the response to an HTTP request
-		return WinHttpReceiveResponse(m_hRequest, NULL);
+		return Send(L"DELETE", "");
 	}
 }
