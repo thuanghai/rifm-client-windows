@@ -151,20 +151,28 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="ArduinoJson.hpp" />
+    <ClInclude Include="DataModel.h" />
+    <ClInclude Include="CommonString.h" />
+    <ClInclude Include="DataOperate.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="SignalElementDemo.h" />
     <ClInclude Include="WinHttpClient.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="DataModel.cpp" />
+    <ClCompile Include="CommonString.cpp" />
+    <ClCompile Include="DataOperate.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="SignalElementDemo.cpp" />
     <ClCompile Include="VCClient.cpp" />
     <ClCompile Include="WinHttpClient.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-  </ImportGroup>
+  <ImportGroup Label="ExtensionTargets" />
 </Project>

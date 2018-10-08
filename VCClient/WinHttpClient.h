@@ -1,4 +1,6 @@
 #pragma once
+#include "CommonString.h"
+
 #include <string>
 #include <sstream>
 #include <vector>
@@ -11,6 +13,16 @@ namespace RIFMClient
 {
 	class WinHttpClient
 	{
+	public:
+		WinHttpClient();
+		~WinHttpClient();
+
+		typedef struct _RESPONSE
+		{
+			DWORD Code;
+			std::string Body;
+		} RESPONSE, RESULT;
+
 	private:
 		HINTERNET m_hSession;
 		HINTERNET m_hConnect;
@@ -30,28 +42,33 @@ namespace RIFMClient
 		// error message
 		std::wstring m_wstrError;
 
-		BOOL Open(IN std::wstring wstrUrl);
-		BOOL Send(IN std::wstring method, IN std::string strData);
+		BOOL Open(IN std::string strUrl);
+		BOOL Send(IN std::wstring wstrMethod, IN std::string strData);
+		VOID Recv(IN OUT RESULT &tagResult);
+		VOID Close();
 
 		std::wstring GetDateTime();
 		std::wstring GetFormatLastErrorCode(IN DWORD dwError);
 		VOID SetErrorMessage(IN std::wstring func, IN std::wstring msg);
+
 	public:
-		WinHttpClient();
-		~WinHttpClient();
+		VOID SetAgent(IN std::wstring strAgent);
 		
 		// DB 'CRUD' operation
-		BOOL Create(IN std::wstring wstrUrl, IN std::string strData);
-		BOOL Read(IN std::wstring wstrUrl);
-		BOOL Update(IN std::wstring wstrUrl, IN std::string strData);
-		BOOL Delete(IN std::wstring wstrUrl);
-		// Ger response code for 'CRUD'
-		DWORD GetStatusCode();
-		// Get response body for 'CRUD'
-		std::string GetResponseBody();
-		// clear open handles
-		VOID Close();
-		
+		BOOL Create(
+			IN std::string strUrl, 
+			IN std::string strData,
+			IN OUT RESULT &tagResult
+		);
+		BOOL Read(IN std::string strUrl, IN OUT RESULT &tagResult);
+		BOOL Update(
+			IN std::string strUrl, 
+			IN std::string strData,
+			IN OUT RESULT &tagResult
+		);
+		BOOL Delete(IN std::string strUrl, IN OUT RESULT &tagResult);
+
+		// Get error message of interact with rifm
 		std::wstring GetErrorMessage();
 	};
 }
