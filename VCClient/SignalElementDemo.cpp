@@ -181,10 +181,10 @@ VOID SignalElementDemo::Run()
 	m_strDemoId = "demo_id";
 	// create one document
 	CreateOne();
-	// read one document
-	ReadOne();
-	// update one document
-	UpdateOne();
-	// delete one document
-	DeleteOne();
+	//// read one document
+	//ReadOne();
+	//// update one document
+	//UpdateOne();
+	//// delete one document
+	//DeleteOne();
 }

@@ -4,10 +4,10 @@
 
 #pragma once
 
-#define ARDUINOJSON_VERSION "5.13.2"
+#define ARDUINOJSON_VERSION "5.13.3"
 #define ARDUINOJSON_VERSION_MAJOR 5
 #define ARDUINOJSON_VERSION_MINOR 13
-#define ARDUINOJSON_VERSION_REVISION 2
+#define ARDUINOJSON_VERSION_REVISION 3
 
 #include <stddef.h>  // for size_t
 #include <stdint.h>  // for uint8_t
@@ -970,23 +970,44 @@ struct FloatTraits<T, 8 /*64bits*/> {
   }
   static T positiveBinaryPowerOfTen(int index) {
     static T factors[] = {
-        1e1, 1e2, 1e4, 1e8, 1e16, 1e32,
-        forge(0x4D384F03, 0xE93FF9F5), forge(0x5A827748, 0xF9301D32),
-        forge(0x75154FDD, 0x7F73BF3C)};
+        1e1,
+        1e2,
+        1e4,
+        1e8,
+        1e16,
+        forge(0x4693B8B5, 0xB5056E17),  // 1e32
+        forge(0x4D384F03, 0xE93FF9F5),  // 1e64
+        forge(0x5A827748, 0xF9301D32),  // 1e128
+        forge(0x75154FDD, 0x7F73BF3C)   // 1e256
+    };
     return factors[index];
   }
   static T negativeBinaryPowerOfTen(int index) {
     static T factors[] = {
-        1e-1, 1e-2, 1e-4, 1e-8, 1e-16, 1e-32,
-        forge(0x32A50FFD, 0x44F4A73D), forge(0x255BBA08, 0xCF8C979D),
-        forge(0x0AC80628, 0x64AC6F43)};
+        forge(0x3FB99999, 0x9999999A),  // 1e-1
+        forge(0x3F847AE1, 0x47AE147B),  // 1e-2
+        forge(0x3F1A36E2, 0xEB1C432D),  // 1e-4
+        forge(0x3E45798E, 0xE2308C3A),  // 1e-8
+        forge(0x3C9CD2B2, 0x97D889BC),  // 1e-16
+        forge(0x3949F623, 0xD5A8A733),  // 1e-32
+        forge(0x32A50FFD, 0x44F4A73D),  // 1e-64
+        forge(0x255BBA08, 0xCF8C979D),  // 1e-128
+        forge(0x0AC80628, 0x64AC6F43)   // 1e-256
+    };
     return factors[index];
   }
   static T negativeBinaryPowerOfTenPlusOne(int index) {
     static T factors[] = {
-        1e0, 1e-1, 1e-3, 1e-7, 1e-15, 1e-31,
-        forge(0x32DA53FC, 0x9631D10D), forge(0x25915445, 0x81B7DEC2),
-        forge(0x0AFE07B2, 0x7DD78B14)};
+        1e0,
+        forge(0x3FB99999, 0x9999999A),  // 1e-1
+        forge(0x3F50624D, 0xD2F1A9FC),  // 1e-3
+        forge(0x3E7AD7F2, 0x9ABCAF48),  // 1e-7
+        forge(0x3CD203AF, 0x9EE75616),  // 1e-15
+        forge(0x398039D6, 0x65896880),  // 1e-31
+        forge(0x32DA53FC, 0x9631D10D),  // 1e-63
+        forge(0x25915445, 0x81B7DEC2),  // 1e-127
+        forge(0x0AFE07B2, 0x7DD78B14)   // 1e-255
+    };
     return factors[index];
   }
   static T nan() {
@@ -1686,7 +1707,8 @@ class JsonVariant : public Internals::JsonVariantBase<JsonVariant> {
   }
   template <typename T>
   typename Internals::EnableIf<Internals::IsSame<T, const char *>::value ||
-                                   Internals::IsSame<T, char *>::value,
+                                   Internals::IsSame<T, char *>::value ||
+                                   Internals::StringTraits<T>::has_append,
                                bool>::type
   is() const {
     return variantIsString();
@@ -1745,7 +1767,7 @@ DEPRECATED("Decimal places are ignored, use the double value instead")
 inline JsonVariant double_with_n_digits(double value, uint8_t) {
   return JsonVariant(value);
 }
-}
+}  // namespace ArduinoJson
 namespace ArduinoJson {
 namespace Internals {
 template <typename T>
@@ -3105,13 +3127,13 @@ inline bool isFloat(const char* s) {
 namespace ArduinoJson {
 namespace Internals {
 inline bool isInteger(const char* s) {
-  if (!s) return false;
+  if (!s || !*s) return false;
   if (issign(*s)) s++;
   while (isdigit(*s)) s++;
   return *s == '\0';
 }
-}
-}
+}  // namespace Internals
+}  // namespace ArduinoJson
 namespace ArduinoJson {
 namespace Internals {
 template <typename T>

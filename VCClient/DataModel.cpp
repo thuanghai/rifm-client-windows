@@ -86,11 +86,15 @@ namespace RIFMClient
 			strJson.erase();
 			return;
 		}
-		StaticJsonBuffer<DataModel::SignalElementSize> objJsonBuffer;
-		//DynamicJsonBuffer objJsonBuffer(JSON_OBJECT_SIZE(mapData.size()));
+
+		//StaticJsonBuffer<DataModel::SignalElementSize> objJsonBuffer;
+		DynamicJsonBuffer objJsonBuffer(JSON_OBJECT_SIZE(mapData.size() + 1));
+		// Note:
+		// Using 'StaticJsonBuffer' may not get the serialized json string, and I do not know fuck why?
+		
 		JsonObject &objRoot = objJsonBuffer.createObject();
 		for (auto kv : mapData)
-			objRoot[kv.first] = kv.second;
+			objRoot.set(kv.first, kv.second);
 		objRoot.printTo(strJson);
 	}
 
@@ -111,12 +115,14 @@ namespace RIFMClient
 			strJson.erase();
 			return;
 		}
-		StaticJsonBuffer<DataModel::SignalElementSize> objJsonBuffer;
-		//DynamicJsonBuffer objJsonBuffer(JSON_OBJECT_SIZE(mapData.size() + 1));
+
+		//StaticJsonBuffer<DataModel::SignalElementSize> objJsonBuffer;
+		DynamicJsonBuffer objJsonBuffer(JSON_OBJECT_SIZE(mapData.size() + 1));
+
 		JsonObject &objRoot = objJsonBuffer.createObject();
 		JsonObject &objSet = objRoot.createNestedObject("$set");
 		for (auto kv : mapData)
-			objSet[kv.first] = kv.second;
+			objSet.set(kv.first, kv.second);
 		objRoot.printTo(strJson);
 	}
 
@@ -135,7 +141,7 @@ namespace RIFMClient
 	)
 	{
 		if (objRoot.containsKey(id))
-			mapData.insert(std::pair<std::string, std::string>(id, objRoot[id]));
+			mapData.insert(std::make_pair(id, objRoot[id].as<std::string>()));
 	}
 
 	/*
@@ -157,8 +163,7 @@ namespace RIFMClient
 		
 		JsonObject &objRoot = objJsonBuffer.parseObject(strJson);
 		// ID
-		mapData.insert(std::pair<std::string, std::string>
-			(DataModel::KeyCommon::ID, objRoot[DataModel::KeyCommon::ID]));
+		mapData.insert(std::make_pair(DataModel::KeyCommon::ID, objRoot[DataModel::KeyCommon::ID].as<std::string>()));
 		// SrcID
 		AddDeserializedData(mapData, objRoot, DataModel::KeyCommon::SrcID);
 		// Timestamp

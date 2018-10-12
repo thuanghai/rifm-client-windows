@@ -36,6 +36,9 @@ namespace RIFMClient
 		IN OUT WinHttpClient::RESULT &tagResult
 	)
 	{
+		// check strData
+		if (strData.empty())
+			return FALSE;
 		// send request using rifm restful interface
 		if (m_objHttpClient.Create(strUrl, strData.c_str(), tagResult) == TRUE)
 			if (tagResult.Code == 201)
@@ -78,6 +81,9 @@ namespace RIFMClient
 		IN OUT WinHttpClient::RESULT &tagResult
 	)
 	{
+		// check update data
+		if (strData.empty())
+			return FALSE;
 		if (m_objHttpClient.Update(strUrl, strData.c_str(), tagResult) == TRUE)
 			if (tagResult.Code == 201)
 				return TRUE;
