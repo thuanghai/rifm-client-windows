@@ -5,6 +5,7 @@
 #include <sstream>
 #include <vector>
 #include <codecvt>
+#include <algorithm>
 #include <Windows.h>
 #include <winhttp.h>
 #pragma comment(lib, "winhttp")
@@ -77,13 +78,13 @@ namespace RIFMClient
 			IN std::string strUrl,
 			IN std::string strData,
 			IN OUT RESPONSE &tagResult
-			);
+		);
 		BOOL Read(IN std::string strUrl, IN OUT RESPONSE &tagResult);
 		BOOL Update(
 			IN std::string strUrl,
 			IN std::string strData,
 			IN OUT RESPONSE &tagResult
-			);
+		);
 		BOOL Delete(IN std::string strUrl, IN OUT RESPONSE &tagResult);
 
 		// Get error message of interact with rifm
@@ -236,22 +237,41 @@ namespace RIFMClient
 		static void SerializeCreateData(
 			std::map<std::string, std::string> &mapData,
 			std::string &strJson
-			);
+		);
+		static void SerializeCreateData(
+			std::vector<std::pair<std::string, std::string>> &vData,
+			std::string &strJson
+		);
 		static void SerializeUpdateData(
 			std::map<std::string, std::string> &mapData,
 			std::string &strJson
-			);
+		);
+		static void SerializeUpdateData(
+			std::vector<std::pair<std::string, std::string>> &vData,
+			std::string &strJson
+		);
 	private:
 		static void AddDeserializedData(
 			std::map<std::string, std::string> &mapData,
 			ArduinoJson::JsonObject &objRoot,
 			std::string id
-			);
+		);
+		static void AddDeserializedData(
+			std::vector<std::pair<std::string, std::string>> &vData,
+			ArduinoJson::JsonObject &objRoot,
+			std::string id
+		);
 	public:
 		static void DeserializeReadData(
 			std::map<std::string, std::string> &mapData,
 			const std::string &strJson,
-			JsonDataClass eJsonClass);
+			JsonDataClass eJsonClass
+		);
+		static void DeserializeReadData(
+			std::vector<std::pair<std::string, std::string>> &vData,
+			const std::string &strJson,
+			JsonDataClass eJsonClass
+		);
 	};
 
 	class DataOperate
@@ -271,27 +291,27 @@ namespace RIFMClient
 			IN CONST std::string &strUrl,
 			IN CONST std::string &data,
 			IN OUT WinHttpClient::RESPONSE &tagResult
-			);
+		);
 		BOOL ReadOne(
 			IN CONST std::string &strUrl,
 			IN OUT WinHttpClient::RESPONSE &tagResult
-			);
+		);
 		BOOL UpdateOne(
 			IN CONST std::string &strUrl,
 			IN CONST std::string &data,
 			IN OUT WinHttpClient::RESPONSE &tagResult
-			);
+		);
 		BOOL DeleteOne(
 			IN CONST std::string &strUrl,
 			IN OUT WinHttpClient::RESPONSE &tagResult
-			);
+		);
 	};
 
 	class Client
 	{
 	private:
 		DataOperate m_objDataOperator;
-		
+
 		DWORD m_dwRestultCode;
 		std::string m_strResultBody;
 		VOID SetResult(WinHttpClient::RESPONSE &tagResponse);
@@ -304,12 +324,20 @@ namespace RIFMClient
 		BOOL Create(
 			IN std::string &strUrl,
 			IN std::map<std::string, std::string> &mapData
-			);
+		);
+		BOOL Create(
+			IN std::string &strUrl,
+			IN std::vector<std::pair<std::string, std::string>> &vData
+		);
 		BOOL Read(IN std::string &strUrl);
 		BOOL Update(
 			IN std::string &strUrl,
 			IN std::map<std::string, std::string> &mapData
-			);
+		);
+		BOOL Update(
+			IN std::string &strUrl,
+			IN std::vector<std::pair<std::string, std::string>> &vData
+		);
 		BOOL Delete(IN std::string &strUrl);
 
 		DWORD GetResultCode();
@@ -319,7 +347,12 @@ namespace RIFMClient
 			IN std::string &strJson,
 			IN DataModel::JsonDataClass eJsonClass,
 			IN OUT std::map<std::string, std::string> &mapData
-			);
+		);
+		VOID GetStructDataFromJson(
+			IN std::string &strJson,
+			IN DataModel::JsonDataClass eJsonClass,
+			IN OUT std::vector<std::pair<std::string, std::string>> &vData
+		);
 	};
 }
 

@@ -687,23 +687,81 @@ namespace RIFMClient
 		// Using 'StaticJsonBuffer' may not get the serialized json string.
 		// And I have no idea of the fuck why.
 
+		// add all elements for creating items except user information
+		BOOL bHasUserInfo = FALSE;
+		std::string strUserKey;
+		std::string strUserValue;
 		ArduinoJson::JsonObject &objRoot = objJsonBuffer.createObject();
 		for (auto kv : mapData)
 		{
 			if (kv.first.compare(DataModel::KeyCommon::User) == 0)
 			{
-				continue;
+				bHasUserInfo = TRUE;
+				strUserKey = kv.first;
+				strUserValue = kv.second;
 			}
 			else
 			{
 				objRoot.set(kv.first, kv.second);
 			}
 		}
-		std::map<std::string, std::string>::iterator iter = mapData.find(DataModel::KeyCommon::User);
-		if (iter != mapData.end())
+		// do the create user information at last.
+		if (bHasUserInfo == TRUE)
 		{
 			ArduinoJson::JsonObject &objEmb = objRoot.createNestedObject("create");
-			objEmb.set(iter->first, iter->second);
+			objEmb.set(strUserKey, strUserValue);
+		}
+		objRoot.printTo(strJson);
+	}
+
+	/*
+	* Summary: json serialize data for rifm client create
+	* Parameters:
+	*  - vData: input created data
+	*  - strJson: output json serialized data
+	* Return: json serialized data
+	*/
+	void DataModel::SerializeCreateData(
+		std::vector<std::pair<std::string, std::string>> &vData,
+		std::string &strJson
+	)
+	{
+		if (vData.size() <= 0)
+		{
+			strJson.erase();
+			return;
+		}
+
+		using namespace ArduinoJson;
+		//StaticJsonBuffer<DataModel::SignalElementSize> objJsonBuffer;
+		ArduinoJson::DynamicJsonBuffer objJsonBuffer(JSON_OBJECT_SIZE(vData.size() + 1));
+		// Note:
+		// Using 'StaticJsonBuffer' may not get the serialized json string.
+		// And I have no idea of the fuck why.
+
+		ArduinoJson::JsonObject &objRoot = objJsonBuffer.createObject();
+		// add all elements for creating items except user information
+		BOOL bHasUserInfo = FALSE;
+		std::string strUserKey;
+		std::string strUserValue;
+		for (auto iter = vData.begin(); iter != vData.end(); iter++)
+		{
+			if (iter->first.compare(DataModel::KeyCommon::User) == 0)
+			{
+				bHasUserInfo = TRUE;
+				strUserKey = iter->first;
+				strUserValue = iter->second;
+			}
+			else
+			{
+				objRoot.set(iter->first, iter->second);
+			}
+		}
+		// add user information for creating item at last
+		if (bHasUserInfo == TRUE)
+		{
+			ArduinoJson::JsonObject &objEmb = objRoot.createNestedObject("create");
+			objEmb.set(strUserKey, strUserValue);
 		}
 		objRoot.printTo(strJson);
 	}
@@ -750,6 +808,47 @@ namespace RIFMClient
 	}
 
 	/*
+	* Summary: json serialize data for rifm client update
+	* Parameters:
+	*  - vData: input updated data
+	*  - strJson: output json serialized data
+	* Return: json serialized data
+	*/
+	void DataModel::SerializeUpdateData(
+		std::vector<std::pair<std::string, std::string>> &vData,
+		std::string &strJson
+	)
+	{
+		if (vData.size() <= 0)
+		{
+			strJson.erase();
+			return;
+		}
+		using namespace ArduinoJson;
+		//StaticJsonBuffer<DataModel::SignalElementSize> objJsonBuffer;
+		ArduinoJson::DynamicJsonBuffer objJsonBuffer(JSON_OBJECT_SIZE(vData.size() + 1));
+		// Note:
+		// Using 'StaticJsonBuffer' may not get the serialized json string.
+		// And I have no idea of the fuck why.
+
+		ArduinoJson::JsonObject &objRoot = objJsonBuffer.createObject();
+		ArduinoJson::JsonObject &objSet = objRoot.createNestedObject("$set");
+		for (auto iter = vData.begin(); iter != vData.end(); iter++)
+		{
+			if (iter->first.compare(DataModel::KeyCommon::User) == 0)
+			{
+				std::string strNewKey = "modify." + DataModel::KeyCommon::User;
+				objSet[strNewKey] = iter->second;
+			}
+			else
+			{
+				objSet[iter->first] = iter->second;
+			}
+		}
+		objRoot.printTo(strJson);
+	}
+
+	/*
 	* Summary: add deserialize data into a variable of map class
 	* Parameters:
 	*  - mapData: input and output data of map class for deserialized result
@@ -766,6 +865,26 @@ namespace RIFMClient
 		if (objRoot.containsKey(id))
 		{
 			mapData.insert(std::make_pair(id, objRoot[id].as<std::string>()));
+		}
+	}
+
+	/*
+	* Summary: add deserialize data into a variable of vector class
+	* Parameters:
+	*  - vData: input and output data of vector class for deserialized result
+	*  - objRoot: json root object of ArduinoJson
+	*  - id: id of add data
+	* Return: add vector element with deserilized data
+	*/
+	void DataModel::AddDeserializedData(
+		std::vector<std::pair<std::string, std::string>> &vData,
+		ArduinoJson::JsonObject &objRoot,
+		std::string id
+	)
+	{
+		if (objRoot.containsKey(id))
+		{
+			vData.push_back(std::make_pair(id, objRoot[id].as<std::string>()));
 		}
 	}
 
@@ -796,13 +915,13 @@ namespace RIFMClient
 		// StoragePath
 		AddDeserializedData(mapData, objRoot, DataModel::KeyCommon::StoragePath);
 		// CreateUser
-		mapData.insert(std::make_pair("user_create", objRoot["create"]["user"].as<std::string>()));
+		mapData.insert(std::make_pair("create_user", objRoot["create"]["user"].as<std::string>()));
 		// CreateTime
-		mapData.insert(std::make_pair("user_create", objRoot["create"]["time"].as<std::string>()));
+		mapData.insert(std::make_pair("create_time", objRoot["create"]["time"].as<std::string>()));
 		// ModifyUser
-		mapData.insert(std::make_pair("user_create", objRoot["modify"]["user"].as<std::string>()));
+		mapData.insert(std::make_pair("modify_user", objRoot["modify"]["user"].as<std::string>()));
 		// ModifyTime
-		mapData.insert(std::make_pair("user_create", objRoot["modify"]["time"].as<std::string>()));
+		mapData.insert(std::make_pair("modify_time", objRoot["modify"]["time"].as<std::string>()));
 		switch (eJsonClass)
 		{
 		case RIFMClient::DataModel::SignalElement:
@@ -837,6 +956,80 @@ namespace RIFMClient
 			AddDeserializedData(mapData, objRoot, DataModel::KeyEmail::From);
 			AddDeserializedData(mapData, objRoot, DataModel::KeyEmail::To);
 			AddDeserializedData(mapData, objRoot, DataModel::KeyEmail::AttachmentType);
+			break;
+		default:
+			break;
+		}
+	}
+
+	/*
+	* Summary: add deserialize data into a variable of vector class
+	* Parameters:
+	*  - vData: input and output data of vector class for deserialized result
+	*  - strJson: input json string to be deserialized
+	*  - eJsonClass: class of data
+	* Return: add vector element with deserilized data
+	*/
+	void DataModel::DeserializeReadData(
+		std::vector<std::pair<std::string, std::string>> &vData,
+		const std::string &strJson,
+		JsonDataClass eJsonClass
+	)
+	{
+		ArduinoJson::DynamicJsonBuffer objJsonBuffer(DataModel::SignalElementSize);
+		// Fuck: StaticJsonBuffer can not use here when I debug it, and I do not know why.
+
+		ArduinoJson::JsonObject &objRoot = objJsonBuffer.parseObject(strJson);
+		// ID
+		vData.push_back(std::make_pair(DataModel::KeyCommon::ID, objRoot[DataModel::KeyCommon::ID].as<std::string>()));
+		// SrcID
+		AddDeserializedData(vData, objRoot, DataModel::KeyCommon::SrcID);
+		// Timestamp
+		AddDeserializedData(vData, objRoot, DataModel::KeyCommon::TimeStamp);
+		// StoragePath
+		AddDeserializedData(vData, objRoot, DataModel::KeyCommon::StoragePath);
+		// CreateUser
+		vData.push_back(std::make_pair("create_user", objRoot["create"]["user"].as<std::string>()));
+		// CreateTime
+		vData.push_back(std::make_pair("create_time", objRoot["create"]["time"].as<std::string>()));
+		// ModifyUser
+		vData.push_back(std::make_pair("modify_user", objRoot["modify"]["user"].as<std::string>()));
+		// ModifyTime
+		vData.push_back(std::make_pair("modify_time", objRoot["modify"]["time"].as<std::string>()));
+		switch (eJsonClass)
+		{
+		case RIFMClient::DataModel::SignalElement:
+			AddDeserializedData(vData, objRoot, DataModel::KeySignalElement::Antenna);
+			AddDeserializedData(vData, objRoot, DataModel::KeySignalElement::Demodulator);
+			AddDeserializedData(vData, objRoot, DataModel::KeySignalElement::FrameType);
+			AddDeserializedData(vData, objRoot, DataModel::KeySignalElement::Frequency);
+			AddDeserializedData(vData, objRoot, DataModel::KeySignalElement::ModulateRate);
+			AddDeserializedData(vData, objRoot, DataModel::KeySignalElement::ModulateType);
+			AddDeserializedData(vData, objRoot, DataModel::KeySignalElement::Polarity);
+			AddDeserializedData(vData, objRoot, DataModel::KeySignalElement::Satellite);
+			AddDeserializedData(vData, objRoot, DataModel::KeySignalElement::SourceType);
+			break;
+		case RIFMClient::DataModel::ControlFrame:
+			AddDeserializedData(vData, objRoot, DataModel::KeyFrameControl::Type);
+			break;
+		case RIFMClient::DataModel::Ip:
+			AddDeserializedData(vData, objRoot, DataModel::KeyIp::EmbeddedSrcID);
+			AddDeserializedData(vData, objRoot, DataModel::KeyIp::Encrypted);
+			AddDeserializedData(vData, objRoot, DataModel::KeyIp::Protocol);
+			AddDeserializedData(vData, objRoot, DataModel::KeyIp::SrcIp);
+			AddDeserializedData(vData, objRoot, DataModel::KeyIp::SrcPort);
+			AddDeserializedData(vData, objRoot, DataModel::KeyIp::DstIp);
+			AddDeserializedData(vData, objRoot, DataModel::KeyIp::DstPort);
+			break;
+		case RIFMClient::DataModel::Http:
+			AddDeserializedData(vData, objRoot, DataModel::KeyHttp::Title);
+			AddDeserializedData(vData, objRoot, DataModel::KeyHttp::Type);
+			break;
+		case RIFMClient::DataModel::Email:
+			AddDeserializedData(vData, objRoot, DataModel::KeyEmail::Title);
+			AddDeserializedData(vData, objRoot, DataModel::KeyEmail::From);
+			AddDeserializedData(vData, objRoot, DataModel::KeyEmail::To);
+			AddDeserializedData(vData, objRoot, DataModel::KeyEmail::AttachmentType);
 			break;
 		default:
 			break;
@@ -987,7 +1180,14 @@ namespace RIFMClient
 	{
 		return m_strError;
 	}
-	
+
+	/*
+	* Summary: create one document from client
+	* Parameters:
+	*  - strUrl: url for mongodb restful interface
+	*  - mapData: map data which is to be created
+	* Return: TRUE if creating action is success
+	*/
 	BOOL Client::Create(IN std::string &strUrl, IN std::map<std::string, std::string> &mapData)
 	{
 		// serialize json string
@@ -1003,6 +1203,34 @@ namespace RIFMClient
 		return bReturn;
 	}
 
+	/*
+	* Summary: create one document from client
+	* Parameters:
+	*  - strUrl: url for mongodb restful interface
+	*  - vData: vector data which is to be created
+	* Return: TRUE if creating action is success
+	*/
+	BOOL Client::Create(IN std::string &strUrl, IN std::vector<std::pair<std::string, std::string>> &vData)
+	{
+		// serialize json string
+		std::string strJson;
+		DataModel::SerializeCreateData(vData, strJson);
+		// send request
+		WinHttpClient::RESPONSE tagResult;
+		ZeroMemory(&tagResult, sizeof(tagResult));
+		BOOL bReturn = m_objDataOperator.CreateOne(strUrl, strJson, tagResult);
+		SetResult(tagResult);
+		if (bReturn == FALSE)
+			SetErrorMessage();
+		return bReturn;
+	}
+
+	/*
+	* Summary: read one document from client
+	* Parameters:
+	*  - strUrl: url for mongodb restful interface
+	* Return: TRUE if reading action is success
+	*/
 	BOOL Client::Read(IN std::string &strUrl)
 	{
 		WinHttpClient::RESPONSE tagResult;
@@ -1014,6 +1242,13 @@ namespace RIFMClient
 		return bReturn;
 	}
 
+	/*
+	* Summary: update one document from client
+	* Parameters:
+	*  - strUrl: url for mongodb restful interface
+	*  - mapData: map data which is to be created
+	* Return: TRUE if creating action is success
+	*/
 	BOOL Client::Update(IN std::string &strUrl, IN std::map<std::string, std::string> &mapData)
 	{
 		// serialize json string
@@ -1029,6 +1264,34 @@ namespace RIFMClient
 		return bReturn;
 	}
 
+	/*
+	* Summary: update one document from client
+	* Parameters:
+	*  - strUrl: url for mongodb restful interface
+	*  - vData: vector data which is to be created
+	* Return: TRUE if creating action is success
+	*/
+	BOOL Client::Update(IN std::string &strUrl, IN std::vector<std::pair<std::string, std::string>> &vData)
+	{
+		// serialize json string
+		std::string strJson;
+		DataModel::SerializeUpdateData(vData, strJson);
+		// send request
+		WinHttpClient::RESPONSE tagResult;
+		ZeroMemory(&tagResult, sizeof(tagResult));
+		BOOL bReturn = m_objDataOperator.UpdateOne(strUrl, strJson, tagResult);
+		SetResult(tagResult);
+		if (bReturn == FALSE)
+			SetErrorMessage();
+		return bReturn;
+	}
+
+	/*
+	* Summary: delete one document from client
+	* Parameters:
+	*  - strUrl: url for mongodb restful interface
+	* Return: TRUE if creating action is success
+	*/
 	BOOL Client::Delete(IN std::string &strUrl)
 	{
 		// send request
@@ -1041,6 +1304,14 @@ namespace RIFMClient
 		return bReturn;
 	}
 
+	/*
+	* Summary: get struct struct data
+	* Parameters:
+	*  - strRawData: http response body
+	*  - eJsonClass: document type in mongodb collection
+	*  - mapData: output map struct data
+	* Return: NULL
+	*/
 	VOID Client::GetStructDataFromJson(
 		IN std::string &strRawData,
 		IN DataModel::JsonDataClass eJsonClass,
@@ -1049,6 +1320,26 @@ namespace RIFMClient
 	{
 		DataModel::DeserializeReadData(
 			mapData,
+			strRawData,
+			DataModel::JsonDataClass::SignalElement);
+	}
+
+	/*
+	* Summary: get struct struct data
+	* Parameters:
+	*  - strRawData: http response body
+	*  - eJsonClass: document type in mongodb collection
+	*  - vData: output vector struct data
+	* Return: NULL
+	*/
+	VOID Client::GetStructDataFromJson(
+		IN std::string &strRawData,
+		IN DataModel::JsonDataClass eJsonClass,
+		IN OUT std::vector<std::pair<std::string, std::string>> &vData
+	)
+	{
+		DataModel::DeserializeReadData(
+			vData,
 			strRawData,
 			DataModel::JsonDataClass::SignalElement);
 	}
